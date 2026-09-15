@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>클릭커 시뮬레이터</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background:#fff8ef;
+    color:#5d4736;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    overflow-x:hidden;
+}
+
+button{
+    border:0;
+    font:inherit;
+    cursor:pointer;
+}
+
+.app{
+    width:100%;
+    max-width:720px;
+    margin:auto;
+    padding-bottom:30px;
+}
+
+header{
+    padding:16px;
+    background:#fffaf3;
+    border-bottom:1px solid #ead9c5;
+}
+
+.title{
+    font-size:26px;
+    font-weight:900;
+}
+
+.subtitle{
+    margin-top:4px;
+    color:#a38a73;
+    font-size:12px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:7px;
+    margin-top:12px;
+}
+
+.stat{
+    background:white;
+    border:1px solid #efdfcd;
+    border-radius:14px;
+    padding:8px 2px;
+    text-align:center;
+}
+
+.stat b{
+    display:block;
+    font-size:15px;
+}
+
+.stat span{
+    display:block;
+    margin-top:2px;
+    color:#a38a73;
+    font-size:10px;
+}
+
+.tabs{
+    position:sticky;
+    top:0;
+    z-index:20;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:5px;
+    padding:8px;
+    background:#fffaf4;
+    border-bottom:1px solid #ead9c5;
+}
+
+.tab{
+    padding:10px 2px;
+    border-radius:11px;
+    background:#f0e3d6;
+    color:#917761;
+    font-size:11px;
+}
+
+.tab.active{
+    background:#dcae7a;
+    color:white;
+    font-weight:900;
+}
+
+.page{
+    display:none;
+    padding:12px;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    background:white;
+    border:1px solid #efdfcd;
+    border-radius:20px;
+    padding:16px;
+    margin-bottom:12px;
+    box-shadow:0 7px 22px rgba(100,70,40,.07);
+}
+
+.center{
+    text-align:center;
+}
+
+.money{
+    font-size:40px;
+    font-weight:900;
+    color:#765239;
+}
+
+.moneyLabel{
+    color:#a38a73;
+    font-size:12px;
+}
+
+.clickArea{
+    display:flex;
+    justify-content:center;
+    padding:20px 0 24px;
+}
+
+.clickButton{
+    width:min(68vw,280px);
+    height:min(68vw,280px);
+    border-radius:50%;
+    border:8px solid #fff0db;
+    background:radial-gradient(circle at 35% 25%,#fff9ed,#e9bd89 62%,#d09259);
+    color:white;
+    font-size:38px;
+    font-weight:900;
+    box-shadow:
+        0 13px 0 #b77745,
+        0 20px 35px rgba(100,70,40,.18);
+    transition:.07s;
+}
+
+.clickButton:active{
+    transform:translateY(9px) scale(.97);
+    box-shadow:
+        0 4px 0 #b77745,
+        0 10px 18px rgba(100,70,40,.12);
+}
+
+.clickButton.cooldown{
+    filter:grayscale(.35);
+    opacity:.65;
+}
+
+.progressTitle{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:#927861;
+    margin-top:8px;
+}
+
+.bar{
+    height:12px;
+    margin-top:5px;
+    border-radius:20px;
+    overflow:hidden;
+    background:#eee2d5;
+}
+
+.fill{
+    width:0;
+    height:100%;
+    background:linear-gradient(90deg,#dfae74,#d29157);
+    transition:.1s;
+}
+
+.xpFill{
+    background:linear-gradient(90deg,#9fbd92,#78a56f);
+}
+
+.feverFill{
+    background:linear-gradient(90deg,#efc05a,#e9984d);
+}
+
+.fever{
+    background:linear-gradient(135deg,#fff4d3,#ffe4b5);
+    border-color:#edca80;
+}
+
+.fever.active{
+    box-shadow:0 0 28px rgba(235,169,52,.3);
+}
+
+.feverTitle{
+    font-size:20px;
+    font-weight:900;
+    color:#a26825;
+}
+
+.feverTimer{
+    margin-top:5px;
+    font-size:28px;
+    font-weight:900;
+    color:#b66c24;
+}
+
+.auto{
+    background:#f9f1e8;
+}
+
+.sectionTitle{
+    font-size:19px;
+    font-weight:900;
+    margin-bottom:10px;
+}
+
+.upgrade{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:13px;
+    margin-bottom:9px;
+    background:#fffaf5;
+    border:1px solid #eedcca;
+    border-radius:16px;
+}
+
+.upgradeInfo{
+    min-width:0;
+}
+
+.upgradeName{
+    font-weight:900;
+    font-size:14px;
+}
+
+.upgradeDesc{
+    margin-top:3px;
+    color:#a18a75;
+    font-size:11px;
+    line-height:1.35;
+}
+
+.levelBadge{
+    display:inline-block;
+    margin-top:6px;
+    padding:3px 7px;
+    border-radius:8px;
+    background:#eee0d1;
+    color:#92745b;
+    font-size:10px;
+}
+
+.buy{
+    flex-shrink:0;
+    padding:9px 11px;
+    border-radius:11px;
+    background:#dcae7a;
+    color:white;
+    font-weight:900;
+}
+
+.buy:disabled{
+    background:#d7cbc0;
+}
+
+.achievement{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:13px;
+    margin-bottom:8px;
+    background:#fffaf5;
+    border:1px solid #eedcca;
+    border-radius:15px;
+}
+
+.achievement.done{
+    background:#fff2d1;
+    border-color:#e6bc67;
+}
+
+.achievementName{
+    font-weight:900;
+    font-size:13px;
+}
+
+.achievementDesc{
+    color:#a18a75;
+    font-size:11px;
+    margin-top:3px;
+}
+
+.badge{
+    flex-shrink:0;
+    padding:5px 8px;
+    border-radius:8px;
+    background:#e7ddd3;
+    color:#947b66;
+    font-size:10px;
+    font-weight:900;
+}
+
+.done .badge{
+    background:#dcae7a;
+    color:white;
+}
+
+.rebirth{
+    background:linear-gradient(135deg,#f5e9ff,#fff0dc);
+    border-color:#dec6eb;
+}
+
+.rebirthCost{
+    font-size:25px;
+    font-weight:900;
+    color:#80569c;
+    text-align:center;
+    margin:10px 0;
+}
+
+.rebirthButton{
+    width:100%;
+    padding:13px;
+    border-radius:13px;
+    background:#9f75bd;
+    color:white;
+    font-weight:900;
+}
+
+.rebirthButton:disabled{
+    background:#cfc5d5;
+}
+
+.bonus{
+    padding:9px 0;
+    border-bottom:1px solid #eee1d6;
+    font-size:13px;
+}
+
+.bonus:last-child{
+    border-bottom:0;
+}
+
+.settingButton{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border-radius:12px;
+    background:#f0e3d7;
+    color:#735944;
+    font-weight:800;
+}
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:20px;
+    z-index:100;
+    transform:translate(-50%,30px);
+    opacity:0;
+    pointer-events:none;
+    padding:11px 17px;
+    border-radius:14px;
+    background:#624a39;
+    color:white;
+    font-size:13px;
+    transition:.2s;
+    white-space:nowrap;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+    opacity:1;
+}
+
+.floatText{
+    position:fixed;
+    z-index:90;
+    pointer-events:none;
+    color:#b96d3b;
+    font-size:20px;
+    font-weight:900;
+    animation:floatUp .75s ease-out forwards;
+}
+
+@keyframes floatUp{
+    0%{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+    100%{
+        opacity:0;
+        transform:translateY(-70px) scale(1.12);
+    }
+}
+
+.crit{
+    color:#d36c37;
+}
+
+@media(max-width:430px){
+    .title{
+        font-size:23px;
+    }
+
+    .money{
+        font-size:35px;
+    }
+
+    .clickButton{
+        font-size:32px;
+    }
+
+    .stat b{
+        font-size:14px;
+    }
+
+    .upgrade{
+        padding:11px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="title">☕ 클릭커 시뮬레이터</div>
+    <div class="subtitle">포근하게 클릭하고 차근차근 성장하세요</div>
+
+    <div class="stats">
+        <div class="stat">
+            <b id="money">0</b>
+            <span>코인</span>
+        </div>
+
+        <div class="stat">
+            <b id="level">1</b>
+            <span>레벨</span>
+        </div>
+
+        <div class="stat">
+            <b id="multi">×1.00</b>
+            <span>배수</span>
+        </div>
+
+        <div class="stat">
+            <b id="rebirths">0</b>
+            <span>환생</span>
+        </div>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button class="tab active" data-page="main">🏠 메인</button>
+    <button class="tab" data-page="shop">🛒 상점</button>
+    <button class="tab" data-page="rebirth">♻️ 환생</button>
+    <button class="tab" data-page="achievements">🏆 업적</button>
+    <button class="tab" data-page="settings">⚙️ 설정</button>
+</nav>
+
+<!-- 메인 -->
+<section id="main" class="page active">
+
+    <div class="card center">
+        <div class="money" id="mainMoney">0</div>
+        <div class="moneyLabel">현재 코인</div>
+
+        <div class="clickArea">
+            <button id="clickButton" class="clickButton">CLICK!</button>
+        </div>
+
+        <div class="progressTitle">
+            <span>쿨타임</span>
+            <span id="cooldownText">준비 완료</span>
+        </div>
+
+        <div class="bar">
+            <div id="cooldownBar" class="fill"></div>
+        </div>
+
+        <div class="progressTitle">
+            <span>경험치</span>
+            <span id="xpText">0 / 120</span>
+        </div>
+
+        <div class="bar">
+            <div id="xpBar" class="fill xpFill"></div>
+        </div>
+    </div>
+
+    <div id="feverCard" class="card fever center">
+        <div class="feverTitle">🔥 FEVER TIME</div>
+        <div id="feverTimer" class="feverTimer">준비 중</div>
+
+        <div class="progressTitle">
+            <span>피버 게이지</span>
+            <span id="feverChargeText">0%</span>
+        </div>
+
+        <div class="bar">
+            <div id="feverChargeBar" class="fill feverFill"></div>
+        </div>
+
+        <button id="feverButton" class="settingButton">🔥 피버 발동</button>
+    </div>
+
+    <div class="card auto">
+        <div class="sectionTitle">🤖 오토마우스</div>
+        <div id="autoStatus">오토마우스가 없습니다.</div>
+        <div class="progressTitle">
+            <span>자동 수익</span>
+            <span id="autoIncome">0 / 초</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="sectionTitle">📊 현재 능력</div>
+        <div class="bonus">클릭 수익 <b id="clickValue">+1</b></div>
+        <div class="bonus">크리티컬 <b id="critText">0%</b></div>
+        <div class="bonus">피버 배수 <b id="feverPowerText">×5.00</b></div>
+        <div class="bonus">피버 지속시간 <b id="feverTimeText">5초</b></div>
+        <div class="bonus">클릭 쿨타임 <b id="cooldownInfo">700ms</b></div>
+    </div>
+
+</section>
+
+<!-- 상점 -->
+<section id="shop" class="page">
+    <div class="card">
+        <div class="sectionTitle">🛒 업그레이드 상점</div>
+        <div id="upgradeList"></div>
+    </div>
+</section>
+
+<!-- 환생 -->
+<section id="rebirth" class="page">
+
+    <div class="card rebirth">
+        <div class="sectionTitle">♻️ 환생</div>
+
+        <div class="center">
+            <div>현재 환생 횟수</div>
+            <div style="font-size:32px;font-weight:900;margin:6px 0" id="rebirthCountBig">0회</div>
+
+            <div class="small">
+                환생하면 코인과 일반 업그레이드가 초기화되지만<br>
+                영구적인 강력한 보너스를 얻습니다.
+            </div>
+        </div>
+
+        <div class="rebirthCost" id="rebirthCost">10,000 G</div>
+
+        <button id="rebirthButton" class="rebirthButton">
+            환생하기
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="sectionTitle">✨ 환생 보너스</div>
+        <div class="bonus">수익 증가 <b id="rbIncome">+0%</b></div>
+        <div class="bonus">클릭 파워 <b id="rbPower">+0</b></div>
+        <div class="bonus">오토 효율 <b id="rbAuto">+0%</b></div>
+        <div class="bonus">경험치 <b id="rbXp">+0%</b></div>
+        <div class="bonus">크리티컬 확률 <b id="rbCrit">+0%</b></div>
+        <div class="bonus">쿨타임 감소 <b id="rbCooldown">-0ms</b></div>
+        <div class="bonus">피버 배수 <b id="rbFever">+0.00</b></div>
+    </div>
+
+</section>
+
+<!-- 업적 -->
+<section id="achievements" class="page">
+    <div class="card">
+        <div class="sectionTitle">🏆 업적</div>
+        <div id="achievementList"></div>
+    </div>
+</section>
+
+<!-- 설정 -->
+<section id="settings" class="page">
+
+    <div class="card">
+        <div class="sectionTitle">⚙️ 설정</div>
+
+        <button id="soundButton" class="settingButton">
+            🔊 효과음: ON
+        </button>
+
+        <button id="saveButton" class="settingButton">
+            💾 지금 저장
+        </button>
+
+        <button id="resetButton" class="settingButton">
+            🗑️ 데이터 초기화
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="sectionTitle">ℹ️ 게임 정보</div>
+        <div class="small">
+            클릭해서 코인을 얻고 업그레이드하세요.<br><br>
+            레벨이 오르면 더 강해집니다.<br>
+            피버 게이지를 채우면 강력한 피버타임을 사용할 수 있습니다.<br>
+            환생하면 영구 보너스를 얻습니다.
+        </div>
+    </div>
+
+</section>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================
+   기본 데이터
+========================= */
+
+const SAVE_KEY = "clickerSimulator_vFinal";
+
+const defaultGame = {
+    money:0,
+    totalCoins:0,
+    clicks:0,
+
+    level:1,
+    xp:0,
+
+    clickPower:1,
+    power2Level:0,
+    multiLevel:0,
+    cooldownLevel:0,
+
+    autoLevel:0,
+    autoSpeedLevel:0,
+
+    critLevel:0,
+
+    feverCharge:0,
+    feverPowerLevel:0,
+    feverTimeLevel:0,
+    feverCount:0,
+
+    coinBoostLevel:0,
+    xpBoostLevel:0,
+
+    rebirths:0,
+
+    achievements:{},
+
+    sound:true
+};
+
+let game = {...defaultGame};
+
+let clickReady = true;
+let cooldownEnd = 0;
+let feverEnd = 0;
+let toastTimer = null;
+
+/* =========================
+   업그레이드
+========================= */
+
+const upgrades = [
+
+    {
+        id:"power",
+        name:"👆 클릭 파워",
+        desc:"클릭 기본 수익 +1",
+        key:"clickPower",
+        base:45,
+        scale:1.48,
+        max:50,
+        apply:()=>{game.clickPower += 1;}
+    },
+
+    {
+        id:"power2",
+        name:"💪 강화 클릭",
+        desc:"클릭 기본 수익 +3",
+        key:"power2Level",
+        base:150,
+        scale:1.53,
+        max:35,
+        apply:()=>{game.clickPower += 3;}
+    },
+
+    {
+        id:"multi",
+        name:"📈 수익 배수",
+        desc:"전체 클릭 수익 +25%",
+        key:"multiLevel",
+        base:220,
+        scale:1.55,
+        max:35,
+        apply:()=>{}
+    },
+
+    {
+        id:"cooldown",
+        name:"⚡ 쿨타임 가속",
+        desc:"클릭 쿨타임 -18ms",
+        key:"cooldownLevel",
+        base:110,
+        scale:1.55,
+        max:30,
+        apply:()=>{}
+    },
+
+    {
+        id:"auto",
+        name:"🤖 오토마우스",
+        desc:"초당 자동 클릭 수익 증가",
+        key:"autoLevel",
+        base:300,
+        scale:1.58,
+        max:30,
+        apply:()=>{}
+    },
+
+    {
+        id:"autoSpeed",
+        name:"🚀 오토 속도",
+        desc:"오토마우스 효율 +15%",
+        key:"autoSpeedLevel",
+        base:450,
+        scale:1.60,
+        max:25,
+        apply:()=>{}
+    },
+
+    {
+        id:"crit",
+        name:"💥 크리티컬",
+        desc:"크리티컬 확률 +2%",
+        key:"critLevel",
+        base:350,
+        scale:1.58,
+        max:30,
+        apply:()=>{}
+    },
+
+    {
+        id:"feverCharge",
+        name:"🔥 피버 충전",
+        desc:"클릭당 피버 게이지 증가",
+        key:"feverChargeLevel",
+        base:520,
+        scale:1.62,
+        max:25,
+        apply:()=>{}
+    },
+
+    {
+        id:"feverPower",
+        name:"🔥 피버 배수",
+        desc:"피버 수익 배수 +0.5",
+        key:"feverPowerLevel",
+        base:800,
+        scale:1.68,
+        max:20,
+        apply:()=>{}
+    },
+
+    {
+        id:"feverTime",
+        name:"⏱️ 피버 지속시간",
+        desc:"피버 지속시간 +1초",
+        key:"feverTimeLevel",
+        base:5000,
+        scale:2.0,
+        max:15,
+        apply:()=>{}
+    },
+
+    {
+        id:"coinBoost",
+        name:"🪙 코인 부스터",
+        desc:"전체 수익 +5%",
+        key:"coinBoostLevel",
+        base:650,
+        scale:1.60,
+        max:30,
+        apply:()=>{}
+    },
+
+    {
+        id:"xpBoost",
+        name:"⭐ 경험치 부스터",
+        desc:"획득 경험치 +10%",
+        key:"xpBoostLevel",
+        base:420,
+        scale:1.58,
+        max:25,
+        apply:()=>{}
+    }
+];
+
+/* =========================
+   업적
+========================= */
+
+const achievements = [
+
+    {
+        id:"click10",
+        name:"첫걸음",
+        desc:"10번 클릭",
+        check:()=>game.clicks>=10,
+        reward:"+2% 수익",
+        type:"income",
+        value:.02
+    },
+
+    {
+        id:"click100",
+        name:"클릭 입문자",
+        desc:"100번 클릭",
+        check:()=>game.clicks>=100,
+        reward:"+3% 수익",
+        type:"income",
+        value:.03
+    },
+
+    {
+        id:"click1000",
+        name:"클릭 전문가",
+        desc:"1,000번 클릭",
+        check:()=>game.clicks>=1000,
+        reward:"+5% 수익",
+        type:"income",
+        value:.05
+    },
+
+    {
+        id:"coin1000",
+        name:"첫 부자",
+        desc:"누적 1,000 코인",
+        check:()=>game.totalCoins>=1000,
+        reward:"+1 클릭 파워",
+        type:"power",
+        value:1
+    },
+
+    {
+        id:"coin100k",
+        name:"작은 부자",
+        desc:"누적 100,000 코인",
+        check:()=>game.totalCoins>=100000,
+        reward:"+5% 수익",
+        type:"income",
+        value:.05
+    },
+
+    {
+        id:"level5",
+        name:"성장 시작",
+        desc:"레벨 5 달성",
+        check:()=>game.level>=5,
+        reward:"+5% 경험치",
+        type:"xp",
+        value:.05
+    },
+
+    {
+        id:"level10",
+        name:"성장 중",
+        desc:"레벨 10 달성",
+        check:()=>game.level>=10,
+        reward:"+7% 수익",
+        type:"income",
+        value:.07
+    },
+
+    {
+        id:"level25",
+        name:"고수",
+        desc:"레벨 25 달성",
+        check:()=>game.level>=25,
+        reward:"+3 클릭 파워",
+        type:"power",
+        value:3
+    },
+
+    {
+        id:"auto1",
+        name:"자동화",
+        desc:"오토마우스 레벨 1",
+        check:()=>game.autoLevel>=1,
+        reward:"+3% 수익",
+        type:"income",
+        value:.03
+    },
+
+    {
+        id:"auto10",
+        name:"자동화 전문가",
+        desc:"오토마우스 레벨 10",
+        check:()=>game.autoLevel>=10,
+        reward:"+7% 수익",
+        type:"income",
+        value:.07
+    },
+
+    {
+        id:"crit25",
+        name:"치명적인 클릭",
+        desc:"크리티컬 레벨 25",
+        check:()=>game.critLevel>=25,
+        reward:"+0.5 크리티컬 배수",
+        type:"crit",
+        value:.5
+    },
+
+    {
+        id:"fever1",
+        name:"첫 피버",
+        desc:"피버타임 1회 발동",
+        check:()=>game.feverCount>=1,
+        reward:"+0.5 피버 배수",
+        type:"fever",
+        value:.5
+    },
+
+    {
+        id:"fever10",
+        name:"피버 마스터",
+        desc:"피버타임 10회 발동",
+        check:()=>game.feverCount>=10,
+        reward:"+1초 피버 지속시간",
+        type:"feverTime",
+        value:1
+    },
+
+    {
+        id:"rebirth1",
+        name:"새로운 시작",
+        desc:"1회 환생",
+        check:()=>game.rebirths>=1,
+        reward:"+10% 수익",
+        type:"income",
+        value:.10
+    },
+
+    {
+        id:"rebirth5",
+        name:"환생자",
+        desc:"5회 환생",
+        check:()=>game.rebirths>=5,
+        reward:"+15% 수익",
+        type:"income",
+        value:.15
+    },
+
+    {
+        id:"rebirth10",
+        name:"환생의 신",
+        desc:"10회 환생",
+        check:()=>game.rebirths>=10,
+        reward:"+25% 수익",
+        type:"income",
+        value:.25
+    }
+];
+
+/* =========================
+   유틸
+========================= */
+
+function $(id){
+    return document.getElementById(id);
+}
+
+function format(n){
+    if(!Number.isFinite(n)) return "0";
+
+    if(n < 1000){
+        return Math.floor(n).toLocaleString("ko-KR");
+    }
+
+    const units = [
+        ["조",1e12],
+        ["억",1e8],
+        ["만",1e4]
+    ];
+
+    for(const [unit,value] of units){
+        if(n >= value){
+            return (n/value).toFixed(n/value>=100?0:2).replace(/\.00$/,"")+unit;
+        }
+    }
+
+    return Math.floor(n).toLocaleString("ko-KR");
+}
+
+function exact(n){
+    return Math.floor(n).toLocaleString("ko-KR");
+}
+
+function showToast(text){
+    const t=$("toast");
+
+    t.textContent=text;
+    t.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer=setTimeout(()=>{
+        t.classList.remove("show");
+    },1400);
+}
+
+/* =========================
+   저장 / 불러오기
+========================= */
+
+function saveGame(){
+    try{
+        localStorage.setItem(SAVE_KEY,JSON.stringify(game));
+    }catch(e){}
+}
+
+function loadGame(){
+
+    try{
+        const saved=localStorage.getItem(SAVE_KEY);
+
+        if(!saved) return;
+
+        const data=JSON.parse(saved);
+
+        if(!data || typeof data!=="object") return;
+
+        game={...defaultGame,...data};
+
+        game.achievements={
+            ...defaultGame.achievements,
+            ...(data.achievements||{})
+        };
+
+        for(const key of Object.keys(defaultGame)){
+
+            if(key==="achievements" || key==="sound") continue;
+
+            if(typeof game[key]!=="number" || !Number.isFinite(game[key])){
+                game[key]=defaultGame[key];
+            }
+        }
+
+        game.sound=data.sound!==false;
+
+    }catch(e){
+        game={...defaultGame};
+    }
+}
+
+/* =========================
+   보너스 계산
+========================= */
+
+function achievementBonus(type){
+
+    let total=0;
+
+    for(const a of achievements){
+
+        if(game.achievements[a.id] && a.type===type){
+            total+=a.value;
+        }
+    }
+
+    return total;
+}
+
+function rebirthIncomeBonus(){
+    return game.rebirths*.10;
+}
+
+function rebirthPowerBonus(){
+    return game.rebirths*2;
+}
+
+function rebirthXpBonus(){
+    return game.rebirths*.05;
+}
+
+function rebirthCritBonus(){
+    return game.rebirths*.01;
+}
+
+function rebirthFeverBonus(){
+    return game.rebirths*.15;
+}
+
+function rebirthAutoBonus(){
+    return game.rebirths*.05;
+}
+
+function getIncomeBonus(){
+    return 1+
+        game.coinBoostLevel*.05+
+        achievementBonus("income")+
+        rebirthIncomeBonus();
+}
+
+function getXPBonus(){
+    return 1+
+        game.xpBoostLevel*.10+
+        achievementBonus("xp")+
+        rebirthXpBonus();
+}
+
+function getMulti(){
+    return 1+
+        game.multiLevel*.25+
+        game.rebirths*.12;
+}
+
+function getClickPower(){
+    return game.clickPower+
+        rebirthPowerBonus()+
+        achievementBonus("power");
+}
+
+function getCritChance(){
+    return Math.min(
+        .65,
+        game.critLevel*.02+
+        rebirthCritBonus()
+    );
+}
+
+function getCritPower(){
+    return 2+
+        game.rebirths*.05+
+        achievementBonus("crit");
+}
+
+function getFeverMultiplier(){
+    return 5+
+        game.feverPowerLevel*.5+
+        achievementBonus("fever")+
+        rebirthFeverBonus();
+}
+
+function getFeverDuration(){
+    return 5+
+        game.feverTimeLevel+
+        achievementBonus("feverTime");
+}
+
+function getCooldown(){
+    return Math.max(
+        140,
+        700-
+        game.cooldownLevel*18-
+        game.rebirths*8
+    );
+}
+
+function getXPNeeded(){
+    return Math.floor(
+        120*Math.pow(1.38,game.level-1)
+    );
+}
+
+function getAutoIncome(){
+    if(game.autoLevel<=0) return 0;
+
+    return game.autoLevel*
+        (1+game.autoSpeedLevel*.15)*
+        (1+rebirthAutoBonus())*
+        getMulti()*
+        getIncomeBonus();
+}
+
+function getRebirthCost(){
+    return Math.floor(
+        10000*Math.pow(2.55,game.rebirths)
+    );
+}
+
+/* =========================
+   효과음
+========================= */
+
+let audioContext=null;
+
+function sound(type){
+
+    if(!game.sound) return;
+
+    try{
+
+        if(!audioContext){
+            audioContext=new (window.AudioContext||window.webkitAudioContext)();
+        }
+
+        if(audioContext.state==="suspended"){
+            audioContext.resume();
+        }
+
+        const osc=audioContext.createOscillator();
+        const gain=audioContext.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        let freq=440;
+
+        if(type==="click") freq=520;
+        if(type==="crit") freq=760;
+        if(type==="buy") freq=620;
+        if(type==="level") freq=900;
+        if(type==="fever") freq=1050;
+        if(type==="rebirth") freq=300;
+
+        osc.frequency.value=freq;
+        osc.type="sine";
+
+        gain.gain.setValueAtTime(.045,audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+            .001,
+            audioContext.currentTime+.09
+        );
+
+        osc.start();
+        osc.stop(audioContext.currentTime+.09);
+
+    }catch(e){}
+}
+
+/* =========================
+   클릭
+========================= */
+
+function createFloat(text,critical=false){
+
+    const el=document.createElement("div");
+
+    el.className="floatText";
+
+    if(critical){
+        el.classList.add("crit");
+    }
+
+    el.textContent=text;
+
+    const rect=$("clickButton").getBoundingClientRect();
+
+    el.style.left=
+        (rect.left+rect.width/2+(Math.random()*70-35))+
+        "px";
+
+    el.style.top=
+        (rect.top+rect.height/2+(Math.random()*50-25))+
+        "px";
+
+    document.body.appendChild(el);
+
+    setTimeout(()=>{
+        el.remove();
+    },800);
+}
+
+function clickGame(){
+
+    if(!clickReady) return;
+
+    clickReady=false;
+
+    const now=Date.now();
+
+    cooldownEnd=now+getCooldown();
+
+    let value=getClickPower();
+
+    let critical=false;
+
+    if(Math.random()<getCritChance()){
+        value*=getCritPower();
+        critical=true;
+    }
+
+    if(feverEnd>now){
+        value*=getFeverMultiplier();
+    }
+
+    value*=getMulti();
+    value*=getIncomeBonus();
+
+    value=Math.max(1,value);
+
+    game.money+=value;
+    game.totalCoins+=value;
+    game.clicks++;
+
+    const feverGain=
+        2+
+        game.feverChargeLevel*.5;
+
+    if(feverEnd<=now){
+        game.feverCharge=Math.min(
+            100,
+            game.feverCharge+feverGain
+        );
+    }
+
+    gainXP(1);
+
+    checkAchievements();
+
+    sound(critical?"crit":"click");
+
+    createFloat(
+        "+"+format(value)+(critical?" CRIT!":""),
+        critical
+    );
+
+    updateUI();
+
+    setTimeout(()=>{
+        clickReady=true;
+        updateUI();
+    },getCooldown());
+}
+
+/* =========================
+   XP / 레벨
+========================= */
+
+function gainXP(amount){
+
+    game.xp+=amount*getXPBonus();
+
+    let leveled=false;
+
+    while(game.xp>=getXPNeeded()){
+
+        game.xp-=getXPNeeded();
+        game.level++;
+
+        leveled=true;
+    }
+
+    if(leveled){
+        sound("level");
+        showToast("⭐ 레벨 업! Lv."+game.level);
+    }
+}
+
+/* =========================
+   피버
+========================= */
+
+function activateFever(){
+
+    if(game.feverCharge<100){
+        showToast("피버 게이지가 부족해!");
+        return;
+    }
+
+    if(Date.now()<feverEnd){
+        showToast("이미 피버타임 중이야!");
+        return;
+    }
+
+    game.feverCharge=0;
+
+    feverEnd=
+        Date.now()+
+        getFeverDuration()*1000;
+
+    game.feverCount++;
+
+    checkAchievements();
+
+    sound("fever");
+
+    showToast(
+        "🔥 피버타임 "+getFeverDuration()+"초!"
+    );
+
+    updateUI();
+}
+
+/* =========================
+   상점
+========================= */
+
+function upgradeCost(u){
+
+    const lv=game[u.key]||0;
+
+    return Math.floor(
+        u.base*Math.pow(u.scale,lv)
+    );
+}
+
+function buyUpgrade(id){
+
+    const u=upgrades.find(x=>x.id===id);
+
+    if(!u) return;
+
+    const lv=game[u.key]||0;
+
+    if(lv>=u.max){
+        showToast("최대 레벨이야!");
+        return;
+    }
+
+    const cost=upgradeCost(u);
+
+    if(game.money<cost){
+        showToast("코인이 부족해!");
+        return;
+    }
+
+    game.money-=cost;
+
+    game[u.key]=lv+1;
+
+    u.apply();
+
+    sound("buy");
+
+    checkAchievements();
+
+    saveGame();
+    renderUpgrades();
+    updateUI();
+
+    showToast(u.name+" 업그레이드!");
+}
+
+function renderUpgrades(){
+
+    const box=$("upgradeList");
+
+    box.innerHTML="";
+
+    for(const u of upgrades){
+
+        const lv=game[u.key]||0;
+        const max=lv>=u.max;
+        const cost=upgradeCost(u);
+
+        const div=document.createElement("div");
+
+        div.className="upgrade";
+
+        div.innerHTML=`
+            <div class="upgradeInfo">
+                <div class="upgradeName">${u.name}</div>
+                <div class="upgradeDesc">${u.desc}</div>
+                <span class="levelBadge">
+                    Lv.${lv}/${u.max}
+                </span>
+            </div>
+
+            <button
+                class="buy"
+                data-upgrade="${u.id}"
+                ${max||game.money<cost?"disabled":""}
+            >
+                ${max?"MAX":format(cost)+" G"}
+            </button>
+        `;
+
+        box.appendChild(div);
+    }
+}
+
+/* =========================
+   업적
+========================= */
+
+function checkAchievements(){
+
+    let changed=false;
+
+    for(const a of achievements){
+
+        if(game.achievements[a.id]) continue;
+
+        if(a.check()){
+
+            game.achievements[a.id]=true;
+
+            changed=true;
+
+            showToast("🏆 업적 달성: "+a.name);
+
+            sound("level");
+        }
+    }
+
+    if(changed){
+        renderAchievements();
+        saveGame();
+    }
+}
+
+function renderAchievements(){
+
+    const box=$("achievementList");
+
+    box.innerHTML="";
+
+    for(const a of achievements){
+
+        const done=!!game.achievements[a.id];
+
+        const div=document.createElement("div");
+
+        div.className=
+            "achievement"+
+            (done?" done":"");
+
+        div.innerHTML=`
+            <div>
+                <div class="achievementName">
+                    ${a.name}
+                </div>
+
+                <div class="achievementDesc">
+                    ${a.desc} · ${a.reward}
+                </div>
+            </div>
+
+            <div class="badge">
+                ${done?"달성":"미달성"}
+            </div>
+        `;
+
+        box.appendChild(div);
+    }
+}
+
+/* =========================
+   환생
+========================= */
+
+function doRebirth(){
+
+    const cost=getRebirthCost();
+
+    if(game.money<cost){
+        showToast("환생 비용이 부족해!");
+        return;
+    }
+
+    const ok=confirm(
+        "환생하면 코인과 일반 업그레이드가 초기화돼.\n"+
+        "영구 보너스를 얻을 수 있어.\n\n"+
+        "정말 환생할까?"
+    );
+
+    if(!ok) return;
+
+    const oldRebirth=game.rebirths;
+
+    game.rebirths++;
+
+    game.money=0;
+    game.clicks=0;
+    game.level=1;
+    game.xp=0;
+
+    game.clickPower=1;
+    game.power2Level=0;
+    game.multiLevel=0;
+    game.cooldownLevel=0;
+
+    game.autoLevel=0;
+    game.autoSpeedLevel=0;
+
+    game.critLevel=0;
+
+    game.feverCharge=0;
+    game.feverPowerLevel=0;
+    game.feverTimeLevel=0;
+
+    game.coinBoostLevel=0;
+    game.xpBoostLevel=0;
+
+    clickReady=true;
+    cooldownEnd=0;
+    feverEnd=0;
+
+    checkAchievements();
+
+    sound("rebirth");
+
+    showToast(
+        "♻️ 환생 완료! "+(oldRebirth+1)+"회"
+    );
+
+    renderUpgrades();
+    renderAchievements();
+    updateUI();
+    saveGame();
+}
+
+/* =========================
+   UI
+========================= */
+
+function updateUI(){
+
+    $("money").textContent=format(game.money);
+    $("mainMoney").textContent=format(game.money);
+
+    $("level").textContent=game.level;
+    $("multi").textContent="×"+getMulti().toFixed(2);
+    $("rebirths").textContent=game.rebirths;
+
+    $("clickValue").textContent=
+        "+"+format(
+            getClickPower()*
+            getMulti()*
+            getIncomeBonus()
+        );
+
+    $("critText").textContent=
+        Math.round(getCritChance()*100)+"%";
+
+    $("feverPowerText").textContent=
+        "×"+getFeverMultiplier().toFixed(2);
+
+    $("feverTimeText").textContent=
+        getFeverDuration()+"초";
+
+    $("cooldownInfo").textContent=
+        getCooldown()+"ms";
+
+    /* XP */
+
+    const xpNeed=getXPNeeded();
+
+    $("xpText").textContent=
+        exact(game.xp)+" / "+exact(xpNeed);
+
+    $("xpBar").style.width=
+        Math.min(100,(game.xp/xpNeed)*100)+"%";
+
+    /* 쿨타임 */
+
+    const now=Date.now();
+
+    if(now>=cooldownEnd){
+
+        clickReady=true;
+
+        $("cooldownText").textContent="준비 완료";
+        $("cooldownBar").style.width="100%";
+        $("clickButton").classList.remove("cooldown");
+
+    }else{
+
+        clickReady=false;
+
+        const remaining=cooldownEnd-now;
+        const total=getCooldown();
+
+        $("cooldownText").textContent=
+            (remaining/1000).toFixed(2)+"초";
+
+        $("cooldownBar").style.width=
+            Math.max(
+                0,
+                (1-remaining/total)*100
+            )+"%";
+
+        $("clickButton").classList.add("cooldown");
+    }
+
+    /* 피버 */
+
+    if(now<feverEnd){
+
+        const remain=(feverEnd-now)/1000;
+
+        $("feverCard").classList.add("active");
+
+        $("feverTimer").textContent=
+            remain.toFixed(1)+"초";
+
+        $("feverButton").textContent=
+            "🔥 피버 진행 중";
+
+    }else{
+
+        $("feverCard").classList.remove("active");
+
+        $("feverTimer").textContent=
+            game.feverCharge>=100?
+            "발동 가능!":
+            "게이지 충전 중";
+
+        $("feverButton").textContent=
+            game.feverCharge>=100?
+            "🔥 피버 발동":
+            "🔥 피버 게이지 필요";
+    }
+
+    $("feverChargeText").textContent=
+        Math.floor(game.feverCharge)+"%";
+
+    $("feverChargeBar").style.width=
+        Math.min(100,game.feverCharge)+"%";
+
+    /* 오토 */
+
+    const auto=getAutoIncome();
+
+    if(game.autoLevel>0){
+
+        $("autoStatus").textContent=
+            "🤖 Lv."+game.autoLevel+
+            " 오토마우스 작동 중";
+
+    }else{
+
+        $("autoStatus").textContent=
+            "오토마우스를 상점에서 구매하세요.";
+    }
+
+    $("autoIncome").textContent=
+        format(auto)+" / 초";
+
+    /* 환생 */
+
+    const cost=getRebirthCost();
+
+    $("rebirthCountBig").textContent=
+        game.rebirths+"회";
+
+    $("rebirthCost").textContent=
+        format(cost)+" G";
+
+    $("rebirthButton").disabled=
+        game.money<cost;
+
+    $("rbIncome").textContent=
+        "+"+Math.round(rebirthIncomeBonus()*100)+"%";
+
+    $("rbPower").textContent=
+        "+"+rebirthPowerBonus();
+
+    $("rbAuto").textContent=
+        "+"+Math.round(rebirthAutoBonus()*100)+"%";
+
+    $("rbXp").textContent=
+        "+"+Math.round(rebirthXpBonus()*100)+"%";
+
+    $("rbCrit").textContent=
+        "+"+Math.round(rebirthCritBonus()*100)+"%";
+
+    $("rbCooldown").textContent=
+        "-"+game.rebirths*8+"ms";
+
+    $("rbFever").textContent=
+        "+"+rebirthFeverBonus().toFixed(2);
+
+    $("soundButton").textContent=
+        game.sound?
+        "🔊 효과음: ON":
+        "🔇 효과음: OFF";
+}
+
+/* =========================
+   자동 수익
+========================= */
+
+let autoAccumulator=0;
+let lastAutoTime=Date.now();
+
+function autoTick(){
+
+    const now=Date.now();
+    const elapsed=(now-lastAutoTime)/1000;
+
+    lastAutoTime=now;
+
+    if(game.autoLevel>0){
+
+        const income=getAutoIncome();
+
+        const amount=income*elapsed;
+
+        game.money+=amount;
+        game.totalCoins+=amount;
+
+        autoAccumulator+=elapsed;
+
+        if(autoAccumulator>=1){
+            autoAccumulator=0;
+            gainXP(.5);
+            checkAchievements();
+        }
+    }
+
+    updateUI();
+}
+
+/* =========================
+   탭
+========================= */
+
+document.querySelectorAll(".tab").forEach(button=>{
+
+    button.addEventListener("click",()=>{
+
+        const page=button.dataset.page;
+
+        document.querySelectorAll(".tab")
+            .forEach(x=>x.classList.remove("active"));
+
+        document.querySelectorAll(".page")
+            .forEach(x=>x.classList.remove("active"));
+
+        button.classList.add("active");
+
+        $(page).classList.add("active");
+
+        if(page==="shop"){
+            renderUpgrades();
+        }
+
+        if(page==="achievements"){
+            renderAchievements();
+        }
+    });
+});
+
+/* =========================
+   버튼 이벤트
+========================= */
+
+$("clickButton").addEventListener(
+    "click",
+    clickGame
+);
+
+$("feverButton").addEventListener(
+    "click",
+    activateFever
+);
+
+$("rebirthButton").addEventListener(
+    "click",
+    doRebirth
+);
+
+$("upgradeList").addEventListener(
+    "click",
+    event=>{
+
+        const button=
+            event.target.closest("[data-upgrade]");
+
+        if(!button) return;
+
+        buyUpgrade(button.dataset.upgrade);
+    }
+);
+
+$("soundButton").addEventListener(
+    "click",
+    ()=>{
+
+        game.sound=!game.sound;
+
+        if(game.sound){
+            sound("buy");
+        }
+
+        updateUI();
+        saveGame();
+    }
+);
+
+$("saveButton").addEventListener(
+    "click",
+    ()=>{
+
+        saveGame();
+        showToast("💾 저장 완료!");
+    }
+);
+
+$("resetButton").addEventListener(
+    "click",
+    ()=>{
+
+        const ok=confirm(
+            "모든 게임 데이터를 삭제할까?"
+        );
+
+        if(!ok) return;
+
+        localStorage.removeItem(SAVE_KEY);
+
+        game={...defaultGame};
+        game.achievements={};
+
+        clickReady=true;
+        cooldownEnd=0;
+        feverEnd=0;
+
+        renderUpgrades();
+        renderAchievements();
+        updateUI();
+
+        showToast("🗑️ 데이터가 초기화됐어.");
+    }
+);
+
+/* =========================
+   자동 저장
+========================= */
+
+setInterval(()=>{
+    saveGame();
+},5000);
+
+/* =========================
+   정확한 실시간 업데이트
+========================= */
+
+setInterval(()=>{
+    autoTick();
+},100);
+
+/* =========================
+   시작
+========================= */
+
+loadGame();
+
+if(typeof game.power2Level!=="number"){
+    game.power2Level=0;
+}
+
+if(typeof game.feverCharge!=="number"){
+    game.feverCharge=0;
+}
+
+if(typeof game.feverCount!=="number"){
+    game.feverCount=0;
+}
+
+if(typeof game.totalCoins!=="number"){
+    game.totalCoins=0;
+}
+
+checkAchievements();
+renderUpgrades();
+renderAchievements();
+updateUI();
+saveGame();
+
+</script>
+
+</body>
+</html>
